@@ -27,7 +27,7 @@ func (l *ZapLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
 	var logFields []zapcore.Field
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
-		logFields = append(logFields, zap.String("req_id", reqID))
+		logFields = append(logFields, zap.String("request_id", reqID))
 	}
 
 	scheme := "http"
@@ -35,12 +35,11 @@ func (l *ZapLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
 		scheme = "https"
 	}
 
-	logFields = append(logFields, zap.String("http_schema", scheme))
 	logFields = append(logFields, zap.String("http_proto", r.Proto))
+	logFields = append(logFields, zap.String("http_schema", scheme))
 	logFields = append(logFields, zap.String("http_method", r.Method))
-	logFields = append(logFields, zap.String("remote_addr", r.RemoteAddr))
-	logFields = append(logFields, zap.String("user_agent", r.UserAgent()))
 	logFields = append(logFields, zap.String("uri", fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)))
+	logFields = append(logFields, zap.String("remote_addr", r.RemoteAddr))
 
 	entry.Logger = entry.Logger.With(logFields...)
 

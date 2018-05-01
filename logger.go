@@ -10,19 +10,19 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// NewZapLogger ...
-func NewZapLogger(logger *zap.Logger) func(next http.Handler) http.Handler {
-	return middleware.RequestLogger(&ZapLogger{logger})
-}
-
-// ZapLogger ...
+// ZapLogger is a structured logger backed by uber/zap.
 type ZapLogger struct {
 	Logger *zap.Logger
 }
 
-// NewLogEntry ...
+// NewZapLogger is a middleware for go.uber.org/zap to log requests.
+func NewZapLogger(logger *zap.Logger) func(next http.Handler) http.Handler {
+	return middleware.RequestLogger(&ZapLogger{logger})
+}
+
+// NewLogEntry creates a new ZapLogEntry for the request.
 func (l *ZapLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
-	entry := &ZapLoggerEntry{Logger: l.Logger}
+	entry := &ZapLogEntry{Logger: l.Logger}
 
 	var logFields []zapcore.Field
 
@@ -47,13 +47,13 @@ func (l *ZapLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
 	return entry
 }
 
-// ZapLoggerEntry ...
-type ZapLoggerEntry struct {
+// ZapLogEntry records the final log when a request completes.
+type ZapLogEntry struct {
 	Logger *zap.Logger
 }
 
 // Write ...
-func (e *ZapLoggerEntry) Write(status, bytes int, elapsed time.Duration) {
+func (e *ZapLogEntry) Write(status, bytes int, elapsed time.Duration) {
 	e.Logger = e.Logger.With(
 		zap.Int("resp_status", status),
 		zap.Int("resp_bytes_length", bytes),
@@ -63,7 +63,8 @@ func (e *ZapLoggerEntry) Write(status, bytes int, elapsed time.Duration) {
 	e.Logger.Info("request complete")
 }
 
-func (e *ZapLoggerEntry) Panic(v interface{}, stack []byte) {
+// Panic ...
+func (e *ZapLogEntry) Panic(v interface{}, stack []byte) {
 	e.Logger = e.Logger.With(
 		zap.String("stack", string(stack)),
 		zap.String("panic", fmt.Sprintf("%+v", v)),

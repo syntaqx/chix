@@ -22,8 +22,6 @@ func NewZapLogger(logger *zap.Logger) func(next http.Handler) http.Handler {
 
 // NewLogEntry creates a new ZapLogEntry for the request.
 func (l *ZapLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
-	entry := &ZapLogEntry{Logger: l.Logger}
-
 	var logFields []zapcore.Field
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
@@ -41,9 +39,9 @@ func (l *ZapLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
 	logFields = append(logFields, zap.String("uri", fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)))
 	logFields = append(logFields, zap.String("remote_addr", r.RemoteAddr))
 
-	entry.Logger = entry.Logger.With(logFields...)
-
-	return entry
+	return &ZapLogEntry{
+		Logger: l.Logger.With(logFields...),
+	}
 }
 
 // ZapLogEntry records the final log when a request completes.
